@@ -54,8 +54,10 @@ app.post("/verify", async (req, res) => {
 });
 
 // Serve UI
+app.use(express.static("public")); // ito para ma-serve lahat ng laman ng public folder
+
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "verify.html"));
+  res.sendFile(__dirname + "/public/verify.html");
 });
 
 // Start server
