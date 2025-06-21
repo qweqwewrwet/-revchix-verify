@@ -1,8 +1,9 @@
 const express = require("express");
 const axios = require("axios");
 const cors = require("cors");
-const { Client, GatewayIntentBits } = require("discord.js");
 require("dotenv").config();
+const path = require("path");
+const { Client, GatewayIntentBits } = require("discord.js");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -10,23 +11,24 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
+// Serve static files from public folder (for HTML, images, CSS, etc.)
+app.use(express.static(path.join(__dirname, "public")));
+
+// Env vars
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const GUILD_ID = process.env.GUILD_ID;
 const ROLE_ID = process.env.ROLE_ID;
 
-// Discord bot client setup
+// Discord bot client para mag-online sa Discord
 const client = new Client({
-  intents: [
-    GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMembers
-  ],
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers],
 });
 
 client.once("ready", () => {
   console.log(`✅ Discord bot is online as ${client.user.tag}`);
 });
 
-// REST API route for assigning role
+// API route for verification
 app.post("/verify", async (req, res) => {
   const { discordID } = req.body;
 
@@ -52,13 +54,13 @@ app.post("/verify", async (req, res) => {
   }
 });
 
-// Basic homepage
+// Serve HTML UI at root path
 app.get("/", (req, res) => {
-  res.send("RevChix Verify API is running ✅");
+  res.sendFile(path.join(__dirname, "public", "verify.html"));
 });
 
-// Start Express server and login bot
+// Start server + login bot
 app.listen(PORT, () => {
   console.log(`✅ Server running on port ${PORT}`);
-  client.login(BOT_TOKEN); // Make the bot go online
+  client.login(BOT_TOKEN);
 });
