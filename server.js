@@ -11,15 +11,21 @@ const PORT = process.env.PORT || 10000;
 app.use(cors());
 app.use(express.json());
 
-// Serve all static files from public folder
+// ✅ Serve static files in "public" folder
 app.use(express.static(path.join(__dirname, "public")));
 
-// Load env vars
+// Load environment variables
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const GUILD_ID = process.env.GUILD_ID;
 const ROLE_ID = process.env.ROLE_ID;
 
-// Discord bot client
+// 🔍 Check if env vars are loaded
+if (!BOT_TOKEN || !GUILD_ID || !ROLE_ID) {
+  console.error("❌ Missing environment variables. Please check .env file.");
+  process.exit(1);
+}
+
+// ✅ Initialize Discord bot client
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers],
 });
@@ -28,7 +34,7 @@ client.once("ready", () => {
   console.log(`✅ Bot ready as ${client.user.tag}`);
 });
 
-// API route to verify user
+// ✅ API route to assign role
 app.post("/verify", async (req, res) => {
   const { discordID } = req.body;
 
@@ -54,13 +60,13 @@ app.post("/verify", async (req, res) => {
   }
 });
 
-// Serve HTML on root path
+// ✅ Serve the HTML page on /
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "verify.html"));
 });
 
-// Start server and login bot
+// ✅ Start server + login bot
 app.listen(PORT, () => {
-  console.log(`✅ Server running on port ${PORT}`);
+  console.log(`🚀 Server live on http://localhost:${PORT}`);
   client.login(BOT_TOKEN);
 });
