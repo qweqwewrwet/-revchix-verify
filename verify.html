@@ -128,7 +128,6 @@
         return;
       }
 
-      // Step 1: Call your backend to assign role
       fetch("https://revchix-verify.onrender.com/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -137,7 +136,7 @@
       .then(res => res.json())
       .then(data => {
         if (data.success) {
-          logToWebhook(discordID); // Step 2: Log to webhook
+          logToWebhook(discordID);
           document.querySelector(".verify-btn").textContent = "Verifying...";
           setTimeout(() => {
             window.location.href = "https://discord.gg/TFz84fKZWj";
