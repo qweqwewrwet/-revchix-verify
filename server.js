@@ -8,18 +8,17 @@ const { Client, GatewayIntentBits } = require("discord.js");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Middlewares
 app.use(cors());
 app.use(express.json());
+app.use(express.static(path.join(__dirname, "public"))); // Serve verify.html, wwee.gif, etc.
 
-// Serve static files from public folder (for HTML, images, CSS, etc.)
-app.use(express.static(path.join(__dirname, "public")));
-
-// Env vars
+// Env variables from .env
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const GUILD_ID = process.env.GUILD_ID;
 const ROLE_ID = process.env.ROLE_ID;
 
-// Discord bot client para mag-online sa Discord
+// Discord bot setup
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers],
 });
@@ -49,18 +48,18 @@ app.post("/verify", async (req, res) => {
 
     res.status(200).json({ success: true, message: "Role assigned successfully." });
   } catch (err) {
-    console.error("Error assigning role:", err.response?.data || err.message);
+    console.error("❌ Error assigning role:", err.response?.data || err.message);
     res.status(500).json({ success: false, error: "Failed to assign role." });
   }
 });
 
-// Serve HTML UI at root path
+// Serve UI at root
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "verify.html"));
 });
 
-// Start server + login bot
+// Start server and login bot
 app.listen(PORT, () => {
-  console.log(`✅ Server running on port ${PORT}`);
+  console.log(`🚀 Server running on port ${PORT}`);
   client.login(BOT_TOKEN);
 });
