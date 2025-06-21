@@ -25,7 +25,7 @@ if (!BOT_TOKEN || !GUILD_ID || !ROLE_ID) {
   process.exit(1);
 }
 
-// ✅ Setup Discord bot
+// ✅ Setup Discord bot client
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers],
 });
@@ -43,15 +43,12 @@ app.post("/verify", async (req, res) => {
   }
 
   try {
-    await axios.put(
-      `https://discord.com/api/v10/guilds/${GUILD_ID}/members/${discordID}/roles/${ROLE_ID}`,
-      {},
-      {
-        headers: {
-          Authorization: `Bot ${BOT_TOKEN}`,
-        },
-      }
-    );
+    const guild = await client.guilds.fetch(GUILD_ID);
+    const member = await guild.members.fetch(discordID);
+
+    if (!member.roles.cache.has(ROLE_ID)) {
+      await member.roles.add(ROLE_ID);
+    }
 
     res.status(200).json({ success: true, message: "Role assigned successfully." });
   } catch (err) {
@@ -62,7 +59,7 @@ app.post("/verify", async (req, res) => {
 
 // ✅ Serve the verify page
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "verify-site", "verify.html"));
+  res.sendFile(path.join(__dirname, "verify-site", "index.html"));
 });
 
 // ✅ Start server and login bot
