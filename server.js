@@ -6,20 +6,20 @@ const path = require("path");
 const { Client, GatewayIntentBits } = require("discord.js");
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 10000;
 
 app.use(cors());
 app.use(express.json());
 
-// Serve static files from public/
+// Serve all static files from public folder
 app.use(express.static(path.join(__dirname, "public")));
 
-// Env variables
+// Load env vars
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const GUILD_ID = process.env.GUILD_ID;
 const ROLE_ID = process.env.ROLE_ID;
 
-// Discord bot
+// Discord bot client
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers],
 });
@@ -28,12 +28,12 @@ client.once("ready", () => {
   console.log(`✅ Bot ready as ${client.user.tag}`);
 });
 
-// Verify endpoint
+// API route to verify user
 app.post("/verify", async (req, res) => {
   const { discordID } = req.body;
 
   if (!discordID || !/^\d{17,19}$/.test(discordID)) {
-    return res.status(400).json({ success: false, error: "Invalid Discord ID" });
+    return res.status(400).json({ success: false, error: "Invalid Discord ID." });
   }
 
   try {
@@ -46,22 +46,21 @@ app.post("/verify", async (req, res) => {
         },
       }
     );
-    res.json({ success: true, message: "Role assigned successfully" });
-  } catch (error) {
-    console.error("Error assigning role:", error.response?.data || error.message);
-    res.status(500).json({ success: false, error: "Failed to assign role" });
+
+    res.status(200).json({ success: true, message: "Role assigned successfully." });
+  } catch (err) {
+    console.error("❌ Role error:", err.response?.data || err.message);
+    res.status(500).json({ success: false, error: "Failed to assign role." });
   }
 });
 
-// Serve UI
-app.use(express.static("public")); // ito para ma-serve lahat ng laman ng public folder
-
+// Serve HTML on root path
 app.get("/", (req, res) => {
-  res.sendFile(__dirname + "/public/verify.html");
+  res.sendFile(path.join(__dirname, "public", "verify.html"));
 });
 
-// Start server
+// Start server and login bot
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`✅ Server running on port ${PORT}`);
   client.login(BOT_TOKEN);
 });
