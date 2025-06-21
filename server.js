@@ -1,8 +1,8 @@
 const express = require("express");
 const axios = require("axios");
 const cors = require("cors");
-require("dotenv").config();
 const { Client, GatewayIntentBits } = require("discord.js");
+require("dotenv").config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -10,21 +10,23 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// Env vars
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const GUILD_ID = process.env.GUILD_ID;
 const ROLE_ID = process.env.ROLE_ID;
 
-// Discord bot client para mag-online sa Discord
+// Discord bot client setup
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers],
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMembers
+  ],
 });
 
 client.once("ready", () => {
   console.log(`✅ Discord bot is online as ${client.user.tag}`);
 });
 
-// REST API route
+// REST API route for assigning role
 app.post("/verify", async (req, res) => {
   const { discordID } = req.body;
 
@@ -50,12 +52,13 @@ app.post("/verify", async (req, res) => {
   }
 });
 
+// Basic homepage
 app.get("/", (req, res) => {
   res.send("RevChix Verify API is running ✅");
 });
 
-// Run Express + Login Discord bot
+// Start Express server and login bot
 app.listen(PORT, () => {
   console.log(`✅ Server running on port ${PORT}`);
-  client.login(BOT_TOKEN); // ← Ito ang nagpapalive sa bot mo
+  client.login(BOT_TOKEN); // Make the bot go online
 });
