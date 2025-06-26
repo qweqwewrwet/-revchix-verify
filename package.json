@@ -5,7 +5,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js"  // Optional: for local development with live reloading
+    "dev": "nodemon server.js"  
   },
   "dependencies": {
     "axios": "^1.6.0",
@@ -15,13 +15,13 @@
     "discord.js": "^14.11.0"
   },
   "engines": {
-    "node": ">=16.0.0"  // Ensure Node.js version compatibility
+    "node": ">=16.0.0"  
   },
-  "author": "Jay Dinosaur",  // You can add your name or leave it as is
+  "author": "Jay Dinosaur",  
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/your-username/revchix-verifier"  // Optional: your GitHub repository URL
+    "url": "https://github.com/your-username/revchix-verifier" 
   },
   "keywords": [
     "discord",
